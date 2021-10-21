@@ -51,13 +51,18 @@ class SimpleApi(APIView):
                         errors.append('Requested product does not exists')
                     else:
                         # return 422 error if the product is out of stock
-                        not_available = status.HTTP_422_UNPROCESSABLE_ENTITY
+                        not_available = status.HTTP_500_INTERNAL_SERVER_ERROR
                 else:
                     success_for_all_products = False
                     # return all the errors if any
                     errors.append(serializer.errors)
             if success_for_all_products:
-                return Response({'orders': orders, 'errors': errors,
-                                 'status': not_available if not_available else status.HTTP_200_OK})
-            return Response({'orders': orders, 'errors': errors, 'status': not_available if not_available else status.HTTP_400_BAD_REQUEST})
+                return Response({
+                    'orders': orders, 'errors': errors,
+                    'status': not_available if not_available else status.HTTP_200_OK
+                }, not_available if not_available else status.HTTP_200_OK)
+            return Response({
+                'orders': orders, 'errors': errors,
+                'status': not_available if not_available else status.HTTP_400_BAD_REQUEST
+            }, not_available if not_available else status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)

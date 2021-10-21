@@ -7,7 +7,7 @@ def get_products():
     try:
         with open('products.txt') as f:
             for index, line in enumerate(f.readlines()):
-                product = line.split()
+                product = line.split('=')
                 product[1] = int(product[1])
                 product.insert(0, index+1)
                 products.append(tuple(product))

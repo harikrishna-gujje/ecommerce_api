@@ -4,7 +4,6 @@ import random
 
 # take the input for sources from the user
 sources = input('Please enter the source of marketplace: ').split(' ')
-sources.append('invalid_marketplace')
 random.shuffle(sources)
 
 #initialize a random order id
@@ -12,7 +11,6 @@ order_id = random.choice(range(1000,10000))
 
 # take the input for the products from the user
 products = input('Enter the product names: ').split(' ')
-products.append('invalid_product')
 
 # lets make a connection to the service provider
 conn = http.client.HTTPConnection("localhost", 8000)
@@ -20,7 +18,9 @@ headers = {'Content-type': 'application/json'}
 
 # create a data simulator here.
 # it attaches random products with random quantity for an order from marketplace
-for source in sources:
+i=0
+while (i<len(sources)):
+    source = sources[i]
     order = dict()
     order['source']=source
     order['order_id'] = order_id + 1
@@ -35,6 +35,7 @@ for source in sources:
 
     # print order details for comparing with output of api
     print(order)
+    
     #lets call the api with orders
     order_json = json.dumps(order)
 
@@ -42,5 +43,7 @@ for source in sources:
 
     response = conn.getresponse()
     # print response from api
-    print(response.read().decode())
-
+    print(response.read().decode(), response.status)
+    i+=1
+    if response.status==500:
+        break
