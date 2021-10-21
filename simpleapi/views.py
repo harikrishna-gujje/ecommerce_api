@@ -10,7 +10,7 @@ from .serializers import ProductSerializer, OrderSerializer
 
 
 class SimpleApi(APIView):
-    """ This will receive the data and sends the response"""
+    """ This is to provide API support for our project. """
 
     product_serializer_class = ProductSerializer
     order_serializer_class = OrderSerializer
@@ -25,6 +25,7 @@ class SimpleApi(APIView):
         orders = list()
         errors = list()
         not_available = None
+        success_for_all_products = True
         # check whether the order we received from marketplace is valid or not
         if serializer.is_valid():
             order = Order.objects.create(order_id=serializer.validated_data['order_id'],
@@ -52,7 +53,11 @@ class SimpleApi(APIView):
                         # return 422 error if the product is out of stock
                         not_available = status.HTTP_422_UNPROCESSABLE_ENTITY
                 else:
+                    success_for_all_products = False
                     # return all the errors if any
                     errors.append(serializer.errors)
+            if success_for_all_products:
+                return Response({'orders': orders, 'errors': errors,
+                                 'status': not_available if not_available else status.HTTP_200_OK})
             return Response({'orders': orders, 'errors': errors, 'status': not_available if not_available else status.HTTP_400_BAD_REQUEST})
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
