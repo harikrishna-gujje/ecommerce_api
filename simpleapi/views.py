@@ -22,7 +22,6 @@ class SimpleApi(APIView):
     def post(self, request):
         """ This will post the data to database after validation"""
         serializer = self.order_serializer_class(data=request.data)
-        orders = list()
         errors = list()
         not_available = None
         success_for_all_products = True
@@ -45,24 +44,24 @@ class SimpleApi(APIView):
                         # reduce the stock if it is a valid product
                         p.stock = p.stock - serializer.validated_data['quantity']
                         p.save()
-                        orders.append(product)
                     elif not Product.objects.filter(product_name=serializer.validated_data['product']).exists():
                         # if the product does not exists in our warehouse
                         errors.append('Requested product does not exists')
                     else:
-                        # return 422 error if the product is out of stock
+                        # return 500 error if the product is out of stock
                         not_available = status.HTTP_500_INTERNAL_SERVER_ERROR
                 else:
                     success_for_all_products = False
                     # return all the errors if any
                     errors.append(serializer.errors)
+            order = OrderItem.objects.filter(order=order)
             if success_for_all_products:
                 return Response({
-                    'orders': orders, 'errors': errors,
+                    'orders': list(order.values('product', 'quantity')), 'errors': errors,
                     'status': not_available if not_available else status.HTTP_200_OK
                 }, not_available if not_available else status.HTTP_200_OK)
             return Response({
-                'orders': orders, 'errors': errors,
+                'orders': list(order.values('product', 'quantity')), 'errors': errors,
                 'status': not_available if not_available else status.HTTP_400_BAD_REQUEST
             }, not_available if not_available else status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
