@@ -17,7 +17,7 @@ class SimpleApi(APIView):
 
     def get(self, request):
         """ This will be executed when get request is made """
-        return Response('hello')
+        return Response('Hello Team! :)')
 
     def post(self, request):
         """ This will post the data to database after validation"""
@@ -29,9 +29,8 @@ class SimpleApi(APIView):
         if serializer.is_valid():
             order = Order.objects.create(order_id=serializer.validated_data['order_id'],
                                          source=serializer.validated_data['source'])
-            order.save()
             for product in request.data['lines']:
-                # check whether the products inside the order or valid or not
+                # check whether the products inside the order are valid or not
                 serializer = self.product_serializer_class(data=product)
 
                 if serializer.is_valid():
@@ -54,14 +53,12 @@ class SimpleApi(APIView):
                     success_for_all_products = False
                     # return all the errors if any
                     errors.append(serializer.errors)
-            order = OrderItem.objects.filter(order=order)
+            ordered_items = OrderItem.objects.filter(order=order)
             if success_for_all_products:
                 return Response({
-                    'orders': list(order.values('product', 'quantity')), 'errors': errors,
-                    'status': not_available if not_available else status.HTTP_200_OK
+                    'orders': list(ordered_items.values('product', 'quantity')), 'errors': errors,
                 }, not_available if not_available else status.HTTP_200_OK)
             return Response({
-                'orders': list(order.values('product', 'quantity')), 'errors': errors,
-                'status': not_available if not_available else status.HTTP_400_BAD_REQUEST
+                'orders': list(ordered_items.values('product', 'quantity')), 'errors': errors,
             }, not_available if not_available else status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
